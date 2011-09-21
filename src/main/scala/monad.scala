@@ -56,22 +56,29 @@ object MonadicFunctions {
     })
   }
 
-  // 8. Replace error("todo") with an implementation
   def flatten[M[_], A](a: M[M[A]], m: Monad[M]): M[A] = {
     m.flatMap(a, identity[M[A]])
   }
- 
-  // 9. Replace error("todo") with an implementation
+
   def apply[M[_], A, B](f: M[A => B], a: M[A], m: Monad[M]): M[B] = {
     m.flatMap(a, { (aa:A) =>
       m.flatMap(f, (ff:A=>B) => m.unital(ff(aa)))
     })
   }
 
-
   // 10. Replace error("todo") with an implementation
-  def filterM[M[_], A](f: A => M[Boolean], as: List[A], m: Monad[M]): M[List[A]] =
-    error("todo")
+  def filterM[M[_], A](f: A => M[Boolean], as: List[A], m: Monad[M]): M[List[A]] = {
+    val ms: M[List[Boolean]] = sequence(as.map(f), m)
+    
+    m.flatMap(ms, { bs: List[Boolean] =>
+      val as2 = bs.zip(as).flatMap( _ match{
+        case (true, a) => List(a)
+        case _ => Nil
+      })
+      m.unital(as2)
+    })
+    
+  }
  
   // 11. Replace error("todo") with an implementation
   def replicateM[M[_], A](n: Int, a: M[A], m: Monad[M]): M[List[A]] =
